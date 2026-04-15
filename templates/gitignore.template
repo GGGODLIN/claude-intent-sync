@@ -47,10 +47,9 @@ debug/
 review-zh/
 
 # ─────────────────────────────────────────────
-# Non-config docs
+# Logs (machine-specific, grow over time)
 # ─────────────────────────────────────────────
-PLUGIN_SCHEMA_NOTES.md
-README.md
+hooks/*.log
 
 # ─────────────────────────────────────────────
 # OS / editor
