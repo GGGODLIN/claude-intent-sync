@@ -1,0 +1,11 @@
+{
+  "name": "sync-claude-config",
+  "version": "0.1.0",
+  "description": "Cross-machine Claude Code config sync — sync intent, not files. Dispatches OS-specific setup as tasks adapted by AI on each machine.",
+  "author": {
+    "name": "GGGODLIN",
+    "url": "https://github.com/GGGODLIN"
+  },
+  "homepage": "https://github.com/GGGODLIN/sync-claude-config",
+  "license": "MIT"
+}
