@@ -160,6 +160,22 @@ The skill scans `pending/`, compares with `done/`, and presents new tasks. You d
 
 ---
 
+## Current Limitations
+
+The framework is currently designed for a **primary/secondary** workflow — typically one origin machine dispatching tasks to one or more target machines. While the underlying Git mechanism is symmetric (any machine with push access can write tasks), the task model has gaps when used in a fully bidirectional / mesh fashion:
+
+- **No machine targeting** — A task in `pending/` is visible to every machine that pulls. There is no `to:` field to scope a task to a specific host. Every pulling machine will be asked whether to execute it.
+- **`done/` is shared, not per-machine** — When machine A executes a task and pushes its `done/X.md`, machine B will then see `X.md` as already done locally and skip it, even if B was the intended target.
+- **`/sync` push does not pre-pull** — Concurrent pushes from two machines that touch the same file will be rejected at the second push and require manual rebase.
+
+For the typical primary→secondary flow (one machine dispatches, others receive), none of these are a problem. They only surface when two or more machines actively dispatch tasks to each other.
+
+## Roadmap
+
+- **Mesh / decentralized task flow** — Add `to:` field to task frontmatter for machine targeting, switch `done/` to a per-host structure (e.g., `done/{hostname}/X.md`), and have `/sync` push perform `git pull --rebase` first. These together will allow any machine to safely dispatch tasks to any other machine in a peer-to-peer fashion.
+- **Linux examples** — More OS-specific example tasks (currently the bundled examples lean toward macOS).
+- **Conflict diagnostics** — Better error messages when `/sync` push fails due to remote divergence.
+
 ## Examples
 
 - [`examples/install-plugins.md`](examples/install-plugins.md) — cross-machine Claude Code plugin installation
