@@ -1,4 +1,10 @@
 # ─────────────────────────────────────────────
+# Credentials (CRITICAL — never commit)
+# ─────────────────────────────────────────────
+.credentials.json
+credentials.json
+
+# ─────────────────────────────────────────────
 # Machine-specific settings (never sync)
 # ─────────────────────────────────────────────
 settings.local.json
@@ -9,6 +15,7 @@ mempalace.yaml
 policy-limits.json
 stats-cache.json
 mcp-needs-auth-cache.json
+statusline-command.sh
 
 # ─────────────────────────────────────────────
 # Session / conversation data (PRIVATE, back up separately if needed)
@@ -45,6 +52,7 @@ backups/
 downloads/
 debug/
 review-zh/
+plans/
 
 # ─────────────────────────────────────────────
 # Logs (machine-specific, grow over time)

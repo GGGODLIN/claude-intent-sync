@@ -39,7 +39,7 @@ Machine A (origin)
 
 Machine B (target)
   → git pull
-  → /sync pull triggers scan of pending/ vs done/
+  → /sync-claude-setting-cross-platform pull triggers scan of pending/ vs done/
   → Lists new tasks with descriptions
   → User says "execute"
   → Claude reads task, adapts for local OS, executes
@@ -98,7 +98,7 @@ Then proceed to the matching section.
    Read `/tmp/claude-intent-sync/templates/CLAUDE.md.snippet` and append it to `~/.claude/CLAUDE.md`. If CLAUDE.md doesn't exist, create it from the snippet.
 
 4. **Help the user create their private config repo:**
-   - Ask for a repo name (suggest `claude-config`)
+   - Ask for a repo name. Let the user choose something memorable. Do not hardcode a default like `claude-config` — guessable repo names reveal the owner-to-repo mapping even when the repo is private.
    - First check if `gh` is available and authenticated: `gh auth status`
    - If yes, use `gh repo create <name> --private`
    - If no, prompt the user to run `gh auth login` first, OR walk them through creating the repo manually on https://github.com/new
@@ -121,24 +121,34 @@ Then proceed to the matching section.
 
 ### Secondary machine (connecting to existing setup)
 
+> **Note:** On Windows (and sometimes macOS), `mv ~/.claude` can fail with Permission denied because Claude Code holds session files open. Use the in-place `git init` approach below — it works on all OSes without touching the parent directory or any locked runtime files.
+
 1. **Ask the user for their private config repo URL** (the one created on their primary machine). Expected format: `https://github.com/username/repo.git` or `git@github.com:username/repo.git`.
 
-2. **Back up existing `~/.claude/` if it has content:**
+2. **Back up the portable subset of the existing `~/.claude/` (optional):**
    ```bash
-   if [ -d ~/.claude ] && [ "$(ls -A ~/.claude)" ]; then
-     mv ~/.claude ~/.claude-backup-$(date +%Y%m%d-%H%M%S)
-   fi
+   TS=$(date +%Y%m%d-%H%M%S)
+   mkdir -p ~/.claude-backup-$TS
+   cp -r ~/.claude/CLAUDE.md ~/.claude/settings.json \
+         ~/.claude/skills ~/.claude/commands ~/.claude/rules \
+         ~/.claude/agents ~/.claude/hooks ~/.claude/scripts \
+         ~/.claude-backup-$TS/ 2>/dev/null || true
    ```
+   Runtime files (`projects/`, `sessions/`, plugins, etc.) are excluded via `.gitignore` in step 3 and will not be overwritten.
 
-3. **Clone the private config repo:**
+3. **Initialize the repo in place (does not remove `~/.claude/`):**
    ```bash
-   git clone <user's repo URL> ~/.claude
+   cd ~/.claude
+   git init -b main
+   git remote add origin <user's repo URL>
+   git fetch origin
+   git checkout -f -b main origin/main
    ```
-   This brings over the `/sync` skill, `cross-machine/` directory, `.gitignore`, and all the user's synced config.
+   This brings over the `/sync-claude-setting-cross-platform` skill, `cross-machine/` directory, `.gitignore`, and all synced config without moving or deleting the parent directory.
 
-4. **Tell the user to restart Claude Code** so it picks up the new skills and commands in `~/.claude/`.
+4. **Restart Claude Code if needed.** Many Claude Code versions hot-reload skills when new files appear in `~/.claude/commands/`. If `/sync-claude-setting-cross-platform` shows up in the skill list immediately, no restart is needed. If not, restart Claude Code so it picks up the new skill.
 
-5. **After restart, the user runs `/sync pull`** to scan for pending cross-machine tasks. From there, the `/sync` skill takes over.
+5. **Run `/sync-claude-setting-cross-platform pull`** to scan for pending cross-machine tasks. From there, the `/sync-claude-setting-cross-platform` skill takes over.
 
 ---
 
@@ -160,12 +170,41 @@ The skill scans `pending/`, compares with `done/`, and presents new tasks. You d
 
 ---
 
+## Migrating from other dotfile managers
+
+If your `~/.claude/` is currently managed by another dotfile tool (chezmoi, stow, yadm, etc.), unbind it **before** running the Secondary bootstrap. Two systems trying to manage the same files will fight each other.
+
+### From chezmoi
+
+```bash
+# 1. Check what chezmoi currently manages under ~/.claude
+chezmoi managed | grep "^\.claude"
+
+# 2. Drop chezmoi's source state for ~/.claude (doesn't touch real files)
+rm -rf ~/.local/share/chezmoi
+rm -rf ~/.config/chezmoi
+
+# 3. Optionally uninstall chezmoi itself if you don't use it elsewhere
+brew uninstall chezmoi   # or: sudo apt remove chezmoi, etc.
+
+# 4. Optionally delete the remote dotfiles repo if it only held ~/.claude
+gh repo delete <user>/dotfiles --yes
+```
+
+### From stow / yadm / others
+
+Unstow the `~/.claude` set (`stow -D claude`) or leave yadm managing unrelated files. The key invariant: after migration, **no other tool should be writing to `~/.claude/`** except the claude-intent-sync flow.
+
+### Cleaning stale `done/` before first pull (important)
+
+If the old dotfile system already had a `~/.claude/cross-machine/done/` populated by previous manual sync attempts, those entries may mask legitimate new tasks on this machine. Inspect and delete any `done/*.md` you did not actually execute on this machine before the first `/sync-claude-setting-cross-platform pull`.
+
 ## Current Limitations
 
 The framework is currently designed for a **primary/secondary** workflow — typically one origin machine dispatching tasks to one or more target machines. While the underlying Git mechanism is symmetric (any machine with push access can write tasks), the task model has gaps when used in a fully bidirectional / mesh fashion:
 
 - **No machine targeting** — A task in `pending/` is visible to every machine that pulls. There is no `to:` field to scope a task to a specific host. Every pulling machine will be asked whether to execute it.
-- **`done/` is shared, not per-machine** — When machine A executes a task and pushes its `done/X.md`, machine B will then see `X.md` as already done locally and skip it, even if B was the intended target.
+- **`done/` is shared, not per-machine** — When machine A executes a task and pushes its `done/X.md`, machine B will then see `X.md` as already done locally and skip it, even if B was the intended target. This is also a problem for users migrating from another sync system: stale `done/` entries from the old system will make new tasks appear "already done".
 - **`/sync` push does not pre-pull** — Concurrent pushes from two machines that touch the same file will be rejected at the second push and require manual rebase.
 
 For the typical primary→secondary flow (one machine dispatches, others receive), none of these are a problem. They only surface when two or more machines actively dispatch tasks to each other.
