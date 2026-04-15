@@ -8,15 +8,15 @@
 
 ## The Problem
 
-Syncing Claude Code config (`~/.claude/`) across machines with traditional dotfile tools (chezmoi, stow, yadm) works for text files but breaks for:
+Syncing Claude Code config (`~/.claude/`) across machines works fine for text files but breaks for:
 
 - Plugin installations (`/install-plugin` has no corresponding file)
-- Scheduled tasks (cron on macOS/Linux, Task Scheduler on Windows)
-- Shell scripts (bash vs PowerShell)
+- Scheduled tasks (cron-like, varies by OS)
+- Shell scripts (different shells across OS)
 - OS-specific binaries and paths
-- Tool installations (brew vs apt vs winget)
+- Tool installations (different package managers)
 
-These require per-OS `{{ if eq .os "darwin" }}...{{ end }}` templating that quickly becomes unmaintainable.
+Traditional dotfile sync approaches require per-OS conditional templating, which becomes unmaintainable as the divergence grows.
 
 ## The Idea
 
