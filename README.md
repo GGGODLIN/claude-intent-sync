@@ -50,6 +50,19 @@ Machine B (target)
 
 ## Bootstrap
 
+### Prerequisites
+
+- [Claude Code](https://claude.com/claude-code) installed
+- `git` installed
+- A GitHub account (or any Git host)
+- Authenticated GitHub access — easiest via [`gh` CLI](https://cli.github.com/):
+  ```bash
+  gh auth login
+  ```
+  Without `gh`, Claude will guide you to create the repo manually on github.com.
+
+### Run it
+
 Open Claude Code on the machine you want to set up, and paste:
 
 > Please read https://github.com/GGGODLIN/claude-intent-sync/blob/main/README.md and help me set up cross-machine sync on this machine.
@@ -86,7 +99,9 @@ Then proceed to the matching section.
 
 4. **Help the user create their private config repo:**
    - Ask for a repo name (suggest `claude-config`)
-   - Use `gh repo create <name> --private` or walk them through creating it on GitHub.com if `gh` is unavailable
+   - First check if `gh` is available and authenticated: `gh auth status`
+   - If yes, use `gh repo create <name> --private`
+   - If no, prompt the user to run `gh auth login` first, OR walk them through creating the repo manually on https://github.com/new
    - Recommend keeping it private — `~/.claude/` may contain non-secret but personal settings
 
 5. **Initialize git in `~/.claude/` and push:**
