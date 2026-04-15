@@ -1,0 +1,15 @@
+<!-- Paste this section into your ~/.claude/CLAUDE.md -->
+
+## Cross-Machine Sync
+
+This setup syncs Claude Code config across multiple computers via a Git repo at `~/.claude/`. OS-specific operations (cron, launchd, plugins, shell scripts) are dispatched as tasks to other machines.
+
+**When to generate a task:** After completing any of these OS-specific operations, proactively ask the user "Sync this to your other machine?":
+- Installing or removing a Claude Code plugin
+- Creating or modifying shell scripts, cron jobs, scheduled tasks, hooks
+- Modifying `settings.local.json` (not tracked by git)
+- Any setup using OS-specific tools (launchd, homebrew, systemd, Task Scheduler, etc.)
+
+**Generating a task:** If the user agrees, write a task `.md` file to `~/.claude/cross-machine/pending/` containing goal, requirements, the approach taken on this machine (as reference, not prescription), and cross-platform considerations. The next `/sync` will push it.
+
+**When NOT to generate a task:** Pure config file changes (settings.json, CLAUDE.md, skills, commands, rules) are synced directly by git — no task needed.

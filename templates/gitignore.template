@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────
+# Machine-specific settings (never sync)
+# ─────────────────────────────────────────────
+settings.local.json
+settings.json.bak
+config.json
+entities.json
+mempalace.yaml
+policy-limits.json
+stats-cache.json
+mcp-needs-auth-cache.json
+
+# ─────────────────────────────────────────────
+# Session / conversation data (PRIVATE, back up separately if needed)
+# ─────────────────────────────────────────────
+projects/
+sessions/
+session-env/
+todos/
+history.jsonl
+
+# ─────────────────────────────────────────────
+# Plugins (installed via /install-plugin on each machine)
+# ─────────────────────────────────────────────
+plugins/
+
+# ─────────────────────────────────────────────
+# Runtime / cache
+# ─────────────────────────────────────────────
+cache/
+paste-cache/
+statsig/
+telemetry/
+shell-snapshots/
+file-history/
+ide/
+chrome/
+usage-data/
+tasks/
+
+# ─────────────────────────────────────────────
+# Temp / local
+# ─────────────────────────────────────────────
+backups/
+downloads/
+debug/
+review-zh/
+
+# ─────────────────────────────────────────────
+# Non-config docs
+# ─────────────────────────────────────────────
+PLUGIN_SCHEMA_NOTES.md
+README.md
+
+# ─────────────────────────────────────────────
+# OS / editor
+# ─────────────────────────────────────────────
+.DS_Store
+*.swp
+*.swo
