@@ -2,21 +2,25 @@
 set -e
 
 # claude-intent-sync installer
-# Installs the /sync skill, cross-machine directory, and .gitignore into ~/.claude/
+# Installs the /sync skill, cross-machine directory, README, and .gitignore into ~/.claude/
 
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Installing claude-intent-sync into: $CLAUDE_DIR"
 
-# Ensure ~/.claude/ exists
+# Ensure ~/.claude/ structure exists
 mkdir -p "$CLAUDE_DIR/commands" "$CLAUDE_DIR/cross-machine/pending" "$CLAUDE_DIR/cross-machine/done"
 
 # Install /sync skill
 cp "$SCRIPT_DIR/skills/sync.md" "$CLAUDE_DIR/commands/sync-claude-setting-cross-platform.md"
 echo "  ✓ Installed /sync skill"
 
-# Install .gitkeep so empty pending/ and done/ persist in git
+# Install cross-machine README (executor guide for the receiving Claude)
+cp "$SCRIPT_DIR/templates/cross-machine-README.md.template" "$CLAUDE_DIR/cross-machine/README.md"
+echo "  ✓ Installed cross-machine/README.md"
+
+# .gitkeep so empty pending/ and done/ persist in git
 touch "$CLAUDE_DIR/cross-machine/pending/.gitkeep"
 touch "$CLAUDE_DIR/cross-machine/done/.gitkeep"
 echo "  ✓ Created cross-machine/ structure"

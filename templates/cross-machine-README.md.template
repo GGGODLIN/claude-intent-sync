@@ -1,0 +1,103 @@
+# Cross-Machine Tasks
+
+This directory holds tasks dispatched between your machines. Tasks describe **what should be true** on a target machine — the receiving Claude reads them, adapts to the local OS, and executes.
+
+## Directory layout
+
+```
+cross-machine/
+├── pending/   ← tasks awaiting execution on at least one machine
+└── done/      ← per-machine completion log
+```
+
+Both directories are git-tracked. `done/` is shared across machines via push/pull, but each machine independently decides what to execute.
+
+---
+
+## When to write a task (origin Claude)
+
+Write a task when something you just did **won't translate cleanly via file sync alone**. Common triggers, ranked by confidence:
+
+### High-confidence triggers (just did one of these → ask the user)
+
+- Ran an interactive install command: `/install-plugin`, `brew install`, `uv tool install`, `apt install`, `winget install`, `npm install -g`
+- Ran an interactive auth command: `gh auth login`, `aws configure`, paste-an-API-key flows
+- Created or modified a scheduled task: `crontab`, `launchctl`, `schtasks`, `systemd timer`
+- Edited `~/.claude/settings.local.json` (this file is gitignored — never syncs)
+- Created or modified a shell script under `~/.claude/hooks/` or similar
+
+### Medium-confidence triggers (consider asking)
+
+- Wrote a script containing absolute paths (`~/foo`, `/Users/...`, `C:\Users\...`)
+- Used an OS-specific tool (`say`, `osascript`, `notify-send`, `pwsh`, `taskkill`)
+- Manually told the user to do something outside Claude (e.g., "go to GitHub.com and create a repo")
+
+### Do NOT write a task
+
+- Pure text config changes (`settings.json`, `CLAUDE.md`, files under `skills/`, `commands/`, `rules/`, `agents/`) — git syncs these directly
+- Anything inside `~/.claude/projects/`, `sessions/`, `cache/`, etc. — these are gitignored
+
+---
+
+## Writing a task
+
+Use the format below. Save as `pending/<short-name>.md`.
+
+```markdown
+---
+task: <short-name>
+from: <hostname> (<os>)
+created: YYYY-MM-DD
+status: pending
+---
+
+## Goal
+One sentence on what should be true after this task runs.
+
+## Requirements
+- Concrete expectations (what's installed, what's scheduled, etc.)
+- External resources used (repo URLs, registry packages)
+- End-state observable behavior
+
+## Reference: how it was done on the origin
+Describe the actual approach taken on the origin machine. Make it clear this is a reference, not a prescription — the target should adapt.
+
+## Cross-platform notes
+Explicitly flag adaptations needed:
+- Equivalent tools on other OSes (crontab ↔ Task Scheduler ↔ systemd)
+- Path format differences
+- Package manager differences
+- Auth or credential setup specifics
+```
+
+---
+
+## Executing tasks (target Claude)
+
+When the user runs `/sync pull`:
+
+1. List `*.md` files in `pending/` (ignore `.gitkeep`)
+2. For each, check if a same-named file exists in `done/` — if yes, skip (already done on some machine)
+3. Present remaining tasks to the user
+4. For each task the user wants to execute:
+   - Read the full task file
+   - Choose the local equivalent for any cross-platform tools mentioned
+   - Run the necessary commands, asking for any auth steps the user needs to do interactively
+   - Verify the end state matches the Goal
+   - Copy the task file to `done/<short-name>.md` and append:
+     ```markdown
+     ---
+     completed_by: <hostname> (<os>)
+     completed_at: YYYY-MM-DD HH:MM
+     ---
+     ## Execution summary
+     - What was actually run on this machine (note any deviations from the reference)
+     - Any manual steps the user did
+     - Verification result
+     ```
+
+---
+
+## Limitations (current design)
+
+This framework is currently optimized for a primary→secondary workflow. See main project README for limitations around fully bidirectional / mesh task flows and the planned roadmap.

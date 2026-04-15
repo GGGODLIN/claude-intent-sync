@@ -170,6 +170,16 @@ The framework is currently designed for a **primary/secondary** workflow — typ
 
 For the typical primary→secondary flow (one machine dispatches, others receive), none of these are a problem. They only surface when two or more machines actively dispatch tasks to each other.
 
+## How task generation is triggered
+
+The framework uses **two complementary triggers** to catch when a task should be created:
+
+1. **In-context trigger (primary)** — Whenever Claude completes an OS-specific operation (plugin install, scheduled task setup, shell script, machine-specific config edit), it proactively asks the user "Sync this to your other machine?" The trigger logic is installed via `templates/CLAUDE.md.snippet` into the user's `CLAUDE.md`, so it stays loaded in every session.
+
+2. **Push-time check (safety net)** — When `/sync` push runs, it inspects the staged file paths for OS-specific patterns (new shell scripts, edits to hook directories, etc.) and prompts the user before committing. This catches cases the in-context trigger missed. No extra LLM call — it reuses the diff Claude already reads.
+
+The in-context trigger is fast and accurate when Claude has full context. The push-time check is the safety net for missed cases. Together they reduce both false negatives (forgotten tasks) and the cost of detecting them.
+
 ## Roadmap
 
 - **Mesh / decentralized task flow** — Add `to:` field to task frontmatter for machine targeting, switch `done/` to a per-host structure (e.g., `done/{hostname}/X.md`), and have `/sync` push perform `git pull --rebase` first. These together will allow any machine to safely dispatch tasks to any other machine in a peer-to-peer fashion.
