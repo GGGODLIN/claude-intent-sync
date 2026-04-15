@@ -173,4 +173,4 @@ MIT
 
 ## Credits
 
-Developed through dogfooding with Claude Code on a Mac+Windows setup.
+Developed through dogfooding Claude Code across multiple machines.

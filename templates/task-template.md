@@ -17,12 +17,12 @@ One-sentence description of what this task should accomplish on the target machi
 
 ## Reference: How it was done on the origin machine / 起源機器的做法（參考，不要照抄）
 
-Describe how this was done on the machine that created the task — as a reference, not a prescription. The target machine should adapt to its own OS.
+Describe how this was done on the machine that created the task — as a reference, not a prescription. The target machine should adapt to its own OS, package manager, and conventions.
 
-Example (for macOS origin):
-```bash
-# crontab
-0 2 * * * ~/.claude/hooks/my-script.sh
+Example:
+```
+# Origin used <scheduler> with <invocation>
+# Target should pick the equivalent scheduler available locally
 ```
 
 ## Cross-platform notes / 跨平台注意
