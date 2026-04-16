@@ -55,6 +55,11 @@ review-zh/
 plans/
 
 # ─────────────────────────────────────────────
+# Machine-specific install state (per-machine, not synced)
+# ─────────────────────────────────────────────
+cross-machine/.initialized
+
+# ─────────────────────────────────────────────
 # Logs (machine-specific, grow over time)
 # ─────────────────────────────────────────────
 hooks/*.log
