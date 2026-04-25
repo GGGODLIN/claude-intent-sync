@@ -27,7 +27,7 @@ todos/
 history.jsonl
 
 # ─────────────────────────────────────────────
-# Plugins (installed via /install-plugin on each machine)
+# Plugins (installed via /plugin install on each machine)
 # ─────────────────────────────────────────────
 plugins/
 

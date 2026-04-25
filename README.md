@@ -1,6 +1,6 @@
 # sync-claude-config
 
-**Sync intent, not files.** A Claude Code plugin for cross-machine config sync where OS-specific setup is dispatched as tasks and adapted by AI on each machine.
+**Sync intent, not files.** A Claude Code workflow for cross-machine config sync where OS-specific setup is dispatched as tasks and adapted by AI on each machine.
 
 > **New user?** Skip to [Install](#install). Open Claude Code, run one command, let Claude handle the rest.
 
@@ -10,7 +10,7 @@
 
 Syncing Claude Code config (`~/.claude/`) across machines works fine for text files but breaks for:
 
-- Plugin installations (`/install-plugin` has no corresponding file)
+- Plugin installations (`/plugin install` has no corresponding file)
 - Scheduled tasks (cron-like, varies by OS)
 - Shell scripts (different shells across OS)
 - OS-specific binaries and paths
@@ -35,10 +35,10 @@ Machine A (origin)
   → Claude completes an OS-specific setup
   → Claude proactively asks: "Sync this to your other machine?"
   → Writes a task .md to pending/
-  → /sync-claude-config:push
+  → /sync
 
 Machine B (target)
-  → /sync-claude-config:pull → triggers scan of pending/ vs done/
+  → /sync pull → triggers scan of pending/ vs done/
   → Lists new tasks with descriptions
   → User says "execute"
   → Claude reads task, adapts for local OS, executes
@@ -49,37 +49,22 @@ Machine B (target)
 
 ## Install
 
-### Recommended: plugin
-
-From Claude Code:
-
-```
-/marketplace add GGGODLIN/GGGODLIN-plugins
-/install-plugin sync-claude-config
-```
-
-(When the plugin is approved for `claude-plugins-official`, the marketplace step becomes unnecessary — a plain `/install-plugin sync-claude-config` will work.)
-
-After install, the plugin will proactively offer to run `/sync-claude-config:setup` on your next interaction. If it doesn't, type `/sync-claude-config:setup` yourself.
-
-### Alternative: bootstrap via Claude reading this README
-
-For users outside the plugin system (CI, headless, or manual preference):
+### Recommended: bootstrap via Claude reading this README
 
 Open Claude Code and paste:
 
 > Please read https://github.com/GGGODLIN/sync-claude-config/blob/main/README.md and help me set up cross-machine sync on this machine.
 
-Claude will follow the instructions below.
+Claude will follow the [Instructions for Claude](#instructions-for-claude) section below — adapting setup to your local OS, package manager, and tools.
 
-### Advanced: direct shell install (non-plugin)
+### Alternative: direct shell install
 
 ```bash
 git clone https://github.com/GGGODLIN/sync-claude-config.git /tmp/scc
 bash /tmp/scc/install.sh
 ```
 
-This installs three commands (`/sync-claude-config-push`, `/sync-claude-config-pull`, `/sync-claude-config-setup`) directly into `~/.claude/commands/` without the plugin system.
+This installs the `/sync` skill into `~/.claude/commands/sync-claude-setting-cross-platform.md` and creates the `~/.claude/cross-machine/` directory structure. After install, follow the [Primary machine bootstrap steps](#primary-machine-first-time-setup) below (create private repo, init git, push).
 
 ### Prerequisites
 
@@ -97,7 +82,7 @@ This installs three commands (`/sync-claude-config-push`, `/sync-claude-config-p
 
 ## Instructions for Claude
 
-If you are Claude Code reading this README to set up a machine (bootstrap flow, not plugin install), follow these steps:
+If you are Claude Code reading this README to set up a machine, follow these steps:
 
 ### Step 1 — Ask the user which mode
 
@@ -116,7 +101,7 @@ Then proceed to the matching section.
    ```bash
    bash /tmp/sync-claude-config/install.sh
    ```
-   This installs three non-plugin commands into `~/.claude/commands/`, creates `~/.claude/cross-machine/{pending,done}/`, and adds a `.gitignore` template to `~/.claude/` if none exists.
+   This installs the `/sync` skill into `~/.claude/commands/sync-claude-setting-cross-platform.md`, creates `~/.claude/cross-machine/{pending,done}/`, and adds a `.gitignore` template to `~/.claude/` if none exists.
 
 3. **Add the cross-machine sync section to the user's `~/.claude/CLAUDE.md`:**
    Read `/tmp/sync-claude-config/templates/CLAUDE.md.snippet` and append it to `~/.claude/CLAUDE.md`. If CLAUDE.md doesn't exist, create it from the snippet.
@@ -178,23 +163,19 @@ Then proceed to the matching section.
    touch ~/.claude/cross-machine/.initialized
    ```
 
-5. **Restart Claude Code if needed.** Many Claude Code versions hot-reload skills when new files appear in `~/.claude/commands/`. If `/sync-claude-config-push` (or `/sync-claude-config:push` if installed via plugin) shows up in the skill list immediately, no restart is needed. If not, restart Claude Code so it picks up the new commands.
+5. **Restart Claude Code if needed.** Many Claude Code versions hot-reload skills when new files appear in `~/.claude/commands/`. If `/sync` (autocompletes to `/sync-claude-setting-cross-platform`) shows up in the skill list immediately, no restart is needed. If not, restart Claude Code so it picks up the new command.
 
-6. **Run the pull command** to scan for pending cross-machine tasks. From there the plugin (or non-plugin commands) takes over.
+6. **Run `/sync pull`** to scan for pending cross-machine tasks.
 
 ---
 
 ## Usage (after setup)
 
-| Action | Plugin install | Non-plugin (bootstrap/install.sh) |
-|--------|----------------|-----------------------------------|
-| Push | `/sync-claude-config:push` | `/sync-claude-config-push` |
-| Pull | `/sync-claude-config:pull` | `/sync-claude-config-pull` |
-| Setup | `/sync-claude-config:setup` | `/sync-claude-config-setup` |
+The skill is registered as `/sync-claude-setting-cross-platform`. In Claude Code, type `/sync` and autocomplete will surface it.
 
-Both paths preserve `/sync` autocomplete — typing `/sync` surfaces all sync-claude-config commands.
-
-**Create a task manually** by writing a `.md` file in `~/.claude/cross-machine/pending/` following [`templates/task-template.md`](templates/task-template.md).
+- **Push local `~/.claude/` changes** — run `/sync` (push is the default mode)
+- **Pull and scan cross-machine tasks** — run `/sync pull` (lists pending tasks; you confirm before each runs)
+- **Create a task manually** — write a `.md` file in `~/.claude/cross-machine/pending/` following [`templates/task-template.md`](templates/task-template.md)
 
 ---
 
@@ -229,24 +210,13 @@ If the old dotfile system already had a `~/.claude/cross-machine/done/` populate
 
 ---
 
-## Upgrading from the framework-only version
-
-If you installed the older README-bootstrap flow (before the plugin), you have `/sync-claude-setting-cross-platform` in `~/.claude/commands/`. The new plugin install adds `/sync-claude-config:*` commands that coexist with the old one. To clean up after you're comfortable with the new commands:
-
-```bash
-rm ~/.claude/commands/sync-claude-setting-cross-platform.md
-cd ~/.claude && git add -A && git commit -m "chore: remove legacy sync command" && git push
-```
-
----
-
 ## Current Limitations
 
 The framework is currently designed for a **primary/secondary** workflow — typically one origin machine dispatching tasks to one or more target machines. While the underlying Git mechanism is symmetric (any machine with push access can write tasks), the task model has gaps when used in a fully bidirectional / mesh fashion:
 
 - **No machine targeting** — A task in `pending/` is visible to every machine that pulls. There is no `to:` field to scope a task to a specific host. Every pulling machine will be asked whether to execute it.
 - **`done/` is shared, not per-machine** — When machine A executes a task and pushes its `done/X.md`, machine B will then see `X.md` as already done locally and skip it, even if B was the intended target. This is also a problem for users migrating from another sync system: stale `done/` entries from the old system will make new tasks appear "already done".
-- **`/sync-claude-config:push` does not pre-pull** — Concurrent pushes from two machines that touch the same file will be rejected at the second push and require manual rebase.
+- **`/sync` does not pre-pull** — Concurrent pushes from two machines that touch the same file will be rejected at the second push and require manual rebase.
 
 For the typical primary→secondary flow (one machine dispatches, others receive), none of these are a problem. They only surface when two or more machines actively dispatch tasks to each other.
 
@@ -263,7 +233,7 @@ The in-context trigger is fast and accurate when Claude has full context. The pu
 ## Roadmap
 
 - **Mesh / decentralized task flow** — Add `to:` field to task frontmatter for machine targeting, switch `done/` to a per-host structure (e.g., `done/{hostname}/X.md`), and have push perform `git pull --rebase` first. These together will allow any machine to safely dispatch tasks to any other machine in a peer-to-peer fashion.
-- **Official marketplace listing** — Submit to `claude-plugins-official` for broader discoverability.
+- **Plugin packaging (WIP)** — Distribute as a Claude Code plugin for one-command install via `/plugin install`.
 - **Linux examples** — More OS-specific example tasks (currently the bundled examples lean toward macOS).
 - **Conflict diagnostics** — Better error messages when push fails due to remote divergence.
 

@@ -20,7 +20,7 @@ Write a task when something you just did **won't translate cleanly via file sync
 
 ### High-confidence triggers (just did one of these → ask the user)
 
-- Ran an interactive install command: `/install-plugin`, `brew install`, `uv tool install`, `apt install`, `winget install`, `npm install -g`
+- Ran an interactive install command: `/plugin install`, `brew install`, `uv tool install`, `apt install`, `winget install`, `npm install -g`
 - Ran an interactive auth command: `gh auth login`, `aws configure`, paste-an-API-key flows
 - Created or modified a scheduled task: `crontab`, `launchctl`, `schtasks`, `systemd timer`
 - Edited `~/.claude/settings.local.json` (this file is gitignored — never syncs)
